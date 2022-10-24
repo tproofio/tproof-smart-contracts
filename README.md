@@ -1,4 +1,10 @@
-# tProof
+<div style="width: 100%; display: flex; justify-content: center; margin-top: 32px; margin-bottom: 32px">
+    <div style="width: 240px; background: white; border-radius: 10px; padding: 8px">
+        <img src="https://tproof.io/images/tProof-Logo-p-500.png"/>
+    </div>
+</div>
+
+# tProof | Everlasting certifications
 
 tProof is a tool to generate everlasting evidence that a file exists at a given date (proof of timestamp).
 
