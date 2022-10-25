@@ -1,14 +1,12 @@
-<div style="width: 100%; display: flex; justify-content: center; margin-top: 32px; margin-bottom: 32px">
-    <div style="width: 240px; background: white; border-radius: 10px; padding: 8px">
-        <img src="https://tproof.io/images/tProof-Logo-p-500.png"/>
-    </div>
-</div>
+<h1 align="center">
+  <a href="https://tproof.io"><img width="250" src="https://user-images.githubusercontent.com/12898752/197747462-83b0b651-88e9-4d96-bb15-882298138197.png" alt="tProof Logo" /></a>
+</h1>
 
 # tProof | Everlasting certifications
 
-tProof is a tool to generate everlasting evidence that a file exists at a given date (proof of timestamp).
+tProof is a tool to **generate everlasting evidence that a file exists at a given date** (proof of timestamp).
 
-tProof takes care of publishing the hash of your file on a public blockchain, making the proof everlasting and with a 
+tProof works by publishing the hash of your file on a public blockchain, making the proof everlasting and with a 
 single upfront cost (generation transaction). The proof, generated in the form of an NFT, lasts forever, while the NFT 
 standard makes it easy for you to recover it, whenever you'll need it.
 
@@ -26,9 +24,15 @@ Full documentation available on [docs.tproof.io](https://docs.tproof.io)
 
 # How it works 🔍
 
-[ TBD ]
+At its core, a **SHA-256 checksum** is generated for each file that wants to be generated. The hash is sent to the smart 
+contract to be included in the list of the proofs. As a result, an NFT is generated. The NFT contains the hash, as
+well as other core information, such as the timestamp at which is has been created, a custom-name (optional) and others.
 
-We can list the **advantages** as follows:
+At the end of the process, all included in a single blockchain transaction, the user receives an NFT that represents the 
+certification. 
+
+We can list the **advantages** of adopting such a technology to certify the existence of a file at a given timestamp,
+as follows:
 
 ✅ Everlasting proofs
 
@@ -37,6 +41,8 @@ We can list the **advantages** as follows:
 ✅ Trustless, and transparent
 
 ✅ Open-source project
+
+Find out more about tProof on our [website](https://tproof.io), and on the [project documentation](https://docs.tproof.io). 
 
 
 # Clone and Install 📋
