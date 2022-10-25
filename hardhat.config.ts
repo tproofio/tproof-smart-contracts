@@ -21,12 +21,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
       chainId: 1337,
-      accounts: [
-        {
-          privateKey: secrets.privateKeys.hardhat.deployer,
-          balance: "10000000000000000000"
-        }
-      ],
       forking: {
         url: secrets.nodeUrls.goerli,
         blockNumber: 7334900
