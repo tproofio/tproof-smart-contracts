@@ -1,6 +1,7 @@
 import {ethers} from "ethers";
 
 export const CHAIN_CONSTANTS = {
+  // Goerli Ethereum
   5: {
     JOD_ID : "f33949491d4a45948c3291e0efe6c6fe",
     ORACLE_ADDRESS: "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb",
@@ -10,6 +11,17 @@ export const CHAIN_CONSTANTS = {
     INITIAL_MINT_PRICE: ethers.utils.parseEther("0.01"),
     INITIAL_VERIFICATION_PRICE: ethers.utils.parseEther("0.02")
   },
+  // Polygon Mainnet
+  137: {
+    JOD_ID : "f33949491d4a45948c3291e0efe6c6fe",
+    ORACLE_ADDRESS: "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb",
+    LINK_ERC20_ADDRESS: "0xb0897686c545045aFc77CF20eC7A532E3120E0F1",
+    WITHDRAW_WALLET_ADDRESS: "0x68C85B3eA70C7cAa14Ad0fc52d3A7d03a63Ef64D",
+    PREPAID_TPROOF_VALIDITY_SECS: 86400*14,
+    INITIAL_MINT_PRICE: ethers.utils.parseEther("3"),
+    INITIAL_VERIFICATION_PRICE: ethers.utils.parseEther("12")
+  },
+  // Hardhat testnet
   1337: {
     JOD_ID : "f33949491d4a45948c3291e0efe6c6fe",
     ORACLE_ADDRESS: "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb",

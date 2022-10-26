@@ -40,6 +40,7 @@ export const deploy = async (
   prepaidTProofValiditySecs: number,
   initialMintPrice: BigNumber,
   initialVerificationPrice: BigNumber,
+  chainId: number,
   enableWaiting: boolean = false
 ): Promise<{
   tProofNFTFactory: TProofNFTFactory,
@@ -57,7 +58,7 @@ export const deploy = async (
   let next_nonce = await owner.getTransactionCount();
 
   // Deploy all the smart contracts
-  const tProofNFTFactory = await deployNFTFactory(owner, 5, next_nonce);
+  const tProofNFTFactory = await deployNFTFactory(owner, chainId, next_nonce);
   console.log("tProofNFTFactory deployed - " + tProofNFTFactory.address);
 
   const tProofHashRegistry = await deployHashRegistry(owner, tProofNFTFactory.address, ++next_nonce);
@@ -110,7 +111,7 @@ export const deploy = async (
 
 
 if (typeof require !== 'undefined' && require.main === module) {
-  let chainId: "5" | "1337" = "5";
+  let chainId: "5" | "137" | "1337" = "137";
   deploy(
     CHAIN_CONSTANTS[chainId].JOD_ID,
     CHAIN_CONSTANTS[chainId].ORACLE_ADDRESS,
@@ -119,6 +120,7 @@ if (typeof require !== 'undefined' && require.main === module) {
     CHAIN_CONSTANTS[chainId].PREPAID_TPROOF_VALIDITY_SECS,
     CHAIN_CONSTANTS[chainId].INITIAL_MINT_PRICE,
     CHAIN_CONSTANTS[chainId].INITIAL_VERIFICATION_PRICE,
+    parseInt(chainId),
     true
   )
     .then(() => process.exit(0))

@@ -43,7 +43,11 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: secrets.etherscanAPI
+    apiKey: {
+      goerli: secrets.etherscanAPI,
+      mainnet: secrets.etherscanAPI,
+      polygon: secrets.polygonscanAPI
+    }
   }
 };
 
