@@ -9,14 +9,47 @@ import {deployRouter, router_setWithdrawRole} from "./SingleContracts/Router";
 import {deployNFTTokenUriGenerator} from "./SingleContracts/NFTTokenUriGenerator";
 import {deployHashRegistryStorageType_ArweaveV1} from "./SingleContracts/HashRegistryStorageType_ArweaveV1";
 import {deployUrlVerifierRouter} from "./SingleContracts/UrlVerifierRouter";
+import {BigNumber, Contract} from "ethers";
+import {
+  TProofHashRegistry,
+  TProofHashRegistryStorageType_ArweaveV1,
+  TProofNFTFactory,
+  TProofNFTTokenUriGenerator,
+  TProofRouter, TProofUrlVerifierRouter
+} from "../../typechain-types";
+import {CHAIN_CONSTANTS} from "../ProjectConstants";
 
-const JOD_ID = "f33949491d4a45948c3291e0efe6c6fe";
-const ORACLE_ADDRESS = "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb";
-const LINK_ERC20_ADDRESS = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
-const withdrawWalletAddress = "0x68C85B3eA70C7cAa14Ad0fc52d3A7d03a63Ef64D";
-const PREPAID_TPROOF_VALIDITY_SECS = 86400*14;
-
-async function main() {
+/**
+ * Function to deploy all the contracts on a new chain. We've used a dedicate function, so that we can call it
+ * also during testing
+ *
+ * @param {string} jobId - id of the Chainlink JobId to certify the match between URL and hash
+ * @param {string} oracleAddress - SC ChainLink Oracle address
+ * @param {string} linkErc20Address - LINK token ERC-20 address
+ * @param {string} withdrawWalletAddress - wallet address allowed to withdraw funds in Router
+ * @param {number} prepaidTProofValiditySecs - how many seconds a proof remains pending, waiting for chainlink URL verification call (suggested >= 14 days)
+ * @param {number} initialMintPrice - price for a mint (initial one)
+ * @param {number} initialVerificationPrice - price for a verification (initial one)
+ * @param {boolean} [enableWaiting] - if true, the waiting between certain deployment calls are executed. This can be skipped to speed up tests on local hardhat node
+ */
+export const deploy = async (
+  jobId: string,
+  oracleAddress: string,
+  linkErc20Address: string,
+  withdrawWalletAddress: string,
+  prepaidTProofValiditySecs: number,
+  initialMintPrice: BigNumber,
+  initialVerificationPrice: BigNumber,
+  chainId: number,
+  enableWaiting: boolean = false
+): Promise<{
+  tProofNFTFactory: TProofNFTFactory,
+  tProofHashRegistry: TProofHashRegistry,
+  tProofRouter: TProofRouter,
+  tProofNFTTokenUriGenerator: TProofNFTTokenUriGenerator,
+  tProofHashRegistryStorageTypeArweaveV1: TProofHashRegistryStorageType_ArweaveV1,
+  tProofUrlVerifierRouter: TProofUrlVerifierRouter
+}> => {
 
   // We get the contract to deploy
   const [owner] = await ethers.getSigners();
@@ -25,13 +58,13 @@ async function main() {
   let next_nonce = await owner.getTransactionCount();
 
   // Deploy all the smart contracts
-  const tProofNFTFactory = await deployNFTFactory(owner, 5, next_nonce);
+  const tProofNFTFactory = await deployNFTFactory(owner, chainId, next_nonce);
   console.log("tProofNFTFactory deployed - " + tProofNFTFactory.address);
 
   const tProofHashRegistry = await deployHashRegistry(owner, tProofNFTFactory.address, ++next_nonce);
   console.log("tProofHashRegistry deployed - " + tProofHashRegistry.address);
 
-  const tProofRouter = await deployRouter(owner, 0, 0, PREPAID_TPROOF_VALIDITY_SECS,
+  const tProofRouter = await deployRouter(owner, initialMintPrice, initialVerificationPrice, prepaidTProofValiditySecs,
     tProofNFTFactory.address, tProofHashRegistry.address, ++next_nonce);
   console.log("tProofRouter deployed - " + tProofRouter.address);
 
@@ -43,11 +76,12 @@ async function main() {
     await deployHashRegistryStorageType_ArweaveV1(owner, tProofHashRegistry.address, ++next_nonce);
   console.log("tProofHashRegistryStorageTypeArweaveV1 deployed - " + tProofHashRegistryStorageTypeArweaveV1.address);
 
-  const tProofUrlVerifierRouter = await deployUrlVerifierRouter(owner, tProofHashRegistry.address, JOD_ID,
-    ORACLE_ADDRESS, LINK_ERC20_ADDRESS, ++next_nonce);
+  const tProofUrlVerifierRouter = await deployUrlVerifierRouter(owner, tProofHashRegistry.address, jobId,
+    oracleAddress, linkErc20Address, ++next_nonce);
   console.log("tProofUrlVerifierRouter deployed - " + tProofUrlVerifierRouter.address);
 
-  await new Promise((resolve, reject) => {setTimeout(resolve,3000)});
+  if (enableWaiting)
+    await new Promise((resolve, reject) => {setTimeout(resolve,15000)});
 
   /// Section where we set all the post-constructor values
 
@@ -72,13 +106,29 @@ async function main() {
   await hashRegistry_addStorageType(owner, tProofHashRegistry.address,
     tProofHashRegistryStorageTypeArweaveV1.address, "ArweaveV1", ++next_nonce);
 
+  return { tProofNFTFactory, tProofHashRegistry, tProofRouter, tProofNFTTokenUriGenerator, tProofHashRegistryStorageTypeArweaveV1, tProofUrlVerifierRouter }
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+
+if (typeof require !== 'undefined' && require.main === module) {
+  let chainId: "5" | "137" | "1337" = "137";
+  deploy(
+    CHAIN_CONSTANTS[chainId].JOD_ID,
+    CHAIN_CONSTANTS[chainId].ORACLE_ADDRESS,
+    CHAIN_CONSTANTS[chainId].LINK_ERC20_ADDRESS,
+    CHAIN_CONSTANTS[chainId].WITHDRAW_WALLET_ADDRESS,
+    CHAIN_CONSTANTS[chainId].PREPAID_TPROOF_VALIDITY_SECS,
+    CHAIN_CONSTANTS[chainId].INITIAL_MINT_PRICE,
+    CHAIN_CONSTANTS[chainId].INITIAL_VERIFICATION_PRICE,
+    parseInt(chainId),
+    true
+  )
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+
+

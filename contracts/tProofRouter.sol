@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract tProofRouter is AccessControl, Pausable {
 
     // contract
-    tProofNFTFactory NFTContract;
+    tProofNFTFactory NFTFactoryContract;
     tProofHashRegistry HashRegistryContract;
 
     // uint256
@@ -32,6 +32,10 @@ contract tProofRouter is AccessControl, Pausable {
     // bytes
     bytes32 public constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
 
+    // boolean
+    /// @dev True if the public file URL verification is open, false otherwise
+    bool public enableFileUrlVerification = false;
+
     /**
       * @param _initialMintPrice initial value for MINT_PRICE
       * @param _initialVerificationPrice initial value for VERIFICATION_PRICE
@@ -44,7 +48,7 @@ contract tProofRouter is AccessControl, Pausable {
         MINT_PRICE = _initialMintPrice;
         VERIFICATION_PRICE = _initialVerificationPrice;
         VALIDITY_FOR_HASH_VERIFICATION = _validityForHashVerification;
-        NFTContract = tProofNFTFactory(_nftContractAddress);
+        NFTFactoryContract = tProofNFTFactory(_nftContractAddress);
         HashRegistryContract = tProofHashRegistry(_hashRegistryAddress);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -73,19 +77,20 @@ contract tProofRouter is AccessControl, Pausable {
         }
         uint amount = (_hash.length * MINT_PRICE) + (numHashFilesWithVerification * VERIFICATION_PRICE);
         require(msg.value >= amount, "Not enough ETH send for minting");
-        uint totalSupplyNft = NFTContract.totalSupply();
-        NFTContract.mint(_to, _hash, _title);
+        uint totalSupplyNft = NFTFactoryContract.totalSupply();
+        NFTFactoryContract.mint(_to, _hash, _title);
 
         // announce we'll certify a certain amount of hashes (already paid)
         if (numHashFilesWithVerification > 0) {
             for (uint i = 0; i < _hash.length; ++i) {
                 if (_withFileURL[i]) {
+                    require(enableFileUrlVerification, "File Url Verification disabled");
                     HashRegistryContract.markHashVerificationPrepaid(
-                        NFTContract.normalizeNftNum(totalSupplyNft), _storageType[i], _evalPaidVerificationExpiration()
+                        NFTFactoryContract.normalizeNftNum(totalSupplyNft), _storageType[i], _evalPaidVerificationExpiration()
                     );
                     if (_delegateTo != 0x0000000000000000000000000000000000000000)
                         HashRegistryContract.delegateStartCertificationCall(
-                            NFTContract.normalizeNftNum(totalSupplyNft), _delegateTo, _to
+                            NFTFactoryContract.normalizeNftNum(totalSupplyNft), _delegateTo, _to
                         );
                 }
                 ++totalSupplyNft;
@@ -100,7 +105,7 @@ contract tProofRouter is AccessControl, Pausable {
       * @param _title list of titles to assign to NFTs
       */
     function editProofTitle (uint[] calldata _nftNum, string[] calldata _title) external whenNotPaused() {
-        NFTContract.updateTitle(_nftNum, _title);
+        NFTFactoryContract.updateTitle(_nftNum, _title);
     }
 
     /**
@@ -112,6 +117,7 @@ contract tProofRouter is AccessControl, Pausable {
       */
     function verifyHashFileUrl(uint[] calldata _nft, string[] calldata _url,
                                     uint16[] calldata _storageType, uint32[] calldata _mimeType) external whenNotPaused() {
+        require(enableFileUrlVerification, "File Url Verification disabled");
         // start the certification
         HashRegistryContract.startCertification(_nft, _url, _storageType, _mimeType, msg.sender);
     }
@@ -123,6 +129,7 @@ contract tProofRouter is AccessControl, Pausable {
       * @param _storageType The type of storage for each given NFT where it's plan to upload the file
       */
     function extendVerification(uint[] calldata _nft, uint16[] calldata _storageType) external payable whenNotPaused() {
+        require(enableFileUrlVerification, "File Url Verification disabled");
         require(msg.value >= (_nft.length * VERIFICATION_PRICE), "Not enough ETH sent");
         for (uint i=0; i<_nft.length; ++i) {
             ( , uint64 certificationPendingValidUntil, , , , ) = HashRegistryContract.hashGeneralDetails(_nft[i]);
@@ -151,12 +158,33 @@ contract tProofRouter is AccessControl, Pausable {
     }
 
     /**
+     * @notice Get the address of the current instance of NFT Factory initialized
+     * @return The address of the NFTFactoryContract
+    **/
+    function getNFTFactoryContractAddress() external view returns(address) {
+        return address(NFTFactoryContract);
+    }
+
+    /**
+     * @notice Get the address of the current instance of Hash Registry initialized
+     * @return The address of the HashRegistryContract
+    **/
+    function getHashRegistryContractAddress() external view returns(address) {
+        return address(HashRegistryContract);
+    }
+
+    /**
       * @notice Collect the ETH in this contract
       */
     function withdraw() public onlyRole(WITHDRAW_ROLE) whenNotPaused() {
         address payable to = payable(msg.sender);
         to.transfer(address(this).balance);
     }
+
+    /**
+      * @notice To handle possible direct payments to contract
+      */
+    receive() external payable {}
 
     /**
      * @notice Pause the functions of this router
@@ -170,5 +198,36 @@ contract tProofRouter is AccessControl, Pausable {
      */
     function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) whenPaused() {
         _unpause();
+    }
+
+    /**
+     * @notice Activates / deactivates the URL Verification process
+     */
+    function toggleUrlVerificationService() public onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused() {
+        enableFileUrlVerification = !enableFileUrlVerification;
+    }
+
+    /**
+     * @notice Sets a new mint price (in ETH)
+     * @param _newMintPrice - the new mint price to set
+     */
+    function setMintPrice(uint _newMintPrice) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        MINT_PRICE = _newMintPrice;
+    }
+
+    /**
+     * @notice Sets a new verification price (in ETH)
+     * @param _newVerificationPrice - the new mint price to set
+     */
+    function setVerificationPrice(uint _newVerificationPrice) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        VERIFICATION_PRICE = _newVerificationPrice;
+    }
+
+    /**
+     * @notice Sets a new value of seconds to keep valid the hash verification request
+     * @param _newValidityForHashVerification - the new amount of time, in seconds
+     */
+    function setValidityForHashVerification(uint _newValidityForHashVerification) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        VALIDITY_FOR_HASH_VERIFICATION = _newValidityForHashVerification;
     }
 }

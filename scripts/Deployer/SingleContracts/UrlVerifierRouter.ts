@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {Contract} from "ethers";
+import {TProofUrlVerifierRouter} from "../../../typechain-types";
 
 /**
  * Deploy an instance of UrlVerifierRouter
@@ -18,7 +19,7 @@ export async function deployUrlVerifierRouter(
   oracle: string,
   LINKAddress: string,
   nonce: number = -1
-): Promise<Contract> {
+): Promise<TProofUrlVerifierRouter> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofUrlVerifierRouter", signer);
   return await contractFactory.deploy(
@@ -27,6 +28,6 @@ export async function deployUrlVerifierRouter(
     oracle,
     LINKAddress,
     { nonce: next_nonce }
-  );
+  ) as TProofUrlVerifierRouter;
 
 }

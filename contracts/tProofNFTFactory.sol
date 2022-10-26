@@ -44,8 +44,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     mapping (uint => tProofNFTData) public data;
     /// @dev description for the json. Stores in a separate part as this is highly optional
     mapping (uint => string) public description;
-    /// @dev if present, we can set a custom image URL
-    mapping (uint => string) public customImageUrl;
 
     // bytes
     /// @dev can call the mint function
@@ -58,7 +56,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     event ProofMinted(uint indexed nft, bytes32 indexed hash, uint timestamp);
     event TitleEdited(uint indexed nft, string newTitle);
     event DescriptionEdited(uint indexed nft, string newDescription);
-    event ImageUrlEdited(uint indexed nft, string newImageUrl);
     event TokenUriGeneratorAddressChanged(address _newAddress);
 
 
@@ -78,7 +75,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
         require((_hash.length == _title.length), "All arrays must have same length");
 
         for (uint i=0; i<_hash.length; ++i) {
-            console.log(normalizeNftNum( totalSupply + i ));
             _safeMint(_to, normalizeNftNum( totalSupply + i ));
         }
 
@@ -135,23 +131,9 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     function setDescription(uint[] calldata _nftNum, string[] calldata _description) external whenNotPaused() {
         require(_nftNum.length == _description.length, "Arrays must have same length");
         for (uint i = 0;  i < _nftNum.length; ++i) {
-            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can edit description");
+            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can change description");
             description[ _nftNum[i] ] = _description[i];
             emit DescriptionEdited(_nftNum[i], _description[i]);
-        }
-    }
-
-    /**
-    * @notice Set the custom URL image for a given NFT
-    * @param _nftNum list of NFT to set image url
-    * @param _imageUrl list of URLs to be set as custom image
-    **/
-    function setCustomImage(uint[] calldata _nftNum, string[] calldata _imageUrl) external whenNotPaused() {
-        require(_nftNum.length == _imageUrl.length, "Arrays must have same length");
-        for (uint i = 0;  i < _nftNum.length; ++i) {
-            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can edit image Url");
-            customImageUrl[ _nftNum[i] ] = _imageUrl[i];
-            emit ImageUrlEdited(_nftNum[i], _imageUrl[i]);
         }
     }
 
@@ -160,18 +142,20 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
      * @param _tokenId The tokenId to return the SVG and metadata for.
      * @return A string representing the TokenUI
      **/
-    function tokenURI(uint256 _tokenId) public view override returns (string memory)
-    { return tokenUriGeneratorContract.getTokenUri(_tokenId); }
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        require(address(tokenUriGeneratorContract) != address(0), "tokenUriGeneratorContract not initialized");
+        return tokenUriGeneratorContract.getTokenUri(_tokenId);
+    }
 
     /**
-     * @notice Given a tokenId, returns the complete number with the Deployment Id.
+     * @notice Given an NftNum, returns the complete number with the Deployment Id (the TokenId)
      * @dev If a value above 10**50 is given, no checks are performed, supposing it's already valid
-     * @param _tokenId The tokenId
+     * @param _nftNum The number of NFT
      * @return The correct Token ID for this DeploymentId
      **/
-    function normalizeNftNum(uint256 _tokenId) public returns(uint256) {
-        if (_tokenId > 10**50) return _tokenId;
-        else return ( (10**50 * DEPLOYMENT_ID) + _tokenId);
+    function normalizeNftNum(uint256 _nftNum) public view returns(uint256) {
+        if (_nftNum > MAX_SUPPLY) return _nftNum;
+        else return ( (10**50 * DEPLOYMENT_ID) + _nftNum);
     }
 
 
@@ -191,6 +175,14 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     function setTokenUriGenerator(address _newAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
         tokenUriGeneratorContract = ItProofNFTTokenUriGeneratorInterface(_newAddress);
         emit TokenUriGeneratorAddressChanged(_newAddress);
+    }
+
+    /**
+    * @notice Get the address of the current instance of TokenUriGenerator initialized
+    * @return The address of the tokenUriGeneratorContract
+    **/
+    function getTokenUriGeneratorAddress() public view returns(address) {
+        return address(tokenUriGeneratorContract);
     }
 
     /**
