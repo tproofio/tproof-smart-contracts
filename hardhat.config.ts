@@ -21,12 +21,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
       chainId: 1337,
-      accounts: [
-        {
-          privateKey: secrets.privateKeys.hardhat.deployer,
-          balance: "10000000000000000000"
-        }
-      ],
       forking: {
         url: secrets.nodeUrls.goerli,
         blockNumber: 7334900
@@ -41,10 +35,19 @@ const config: HardhatUserConfig = {
       url: secrets.nodeUrls.mainnetEth,
       accounts: [secrets.privateKeys.mainnetEth.deployer],
       gasPrice: "auto"
+    },
+    mainnetPoly: {
+      url: secrets.nodeUrls.mainnetPoly,
+      accounts: [secrets.privateKeys.mainnetPoly.deployer],
+      gasPrice: "auto"
     }
   },
   etherscan: {
-    apiKey: secrets.etherscanAPI
+    apiKey: {
+      goerli: secrets.etherscanAPI,
+      mainnet: secrets.etherscanAPI,
+      polygon: secrets.polygonscanAPI
+    }
   }
 };
 

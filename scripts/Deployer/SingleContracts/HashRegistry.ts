@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {Contract} from "ethers";
+import {TProofHashRegistry} from "../../../typechain-types";
 
 /**
  * Deploy an instance of Hash Regsitry
@@ -8,13 +9,13 @@ import {Contract} from "ethers";
  * @param tProofNFTFactoryAddress - address of the NFT Factory contract on chain
  * @param [nonce] - if we want to pass a nonce, rather than having the code to evaluate it
  */
-export async function deployHashRegistry(signer: SignerWithAddress, tProofNFTFactoryAddress: string, nonce: number = -1): Promise<Contract> {
+export async function deployHashRegistry(signer: SignerWithAddress, tProofNFTFactoryAddress: string, nonce: number = -1): Promise<TProofHashRegistry> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofHashRegistry", signer);
   return await contractFactory.deploy(
     tProofNFTFactoryAddress,
     { nonce: next_nonce }
-  );
+  ) as TProofHashRegistry;
 
 }
 

@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {Contract} from "ethers";
+import {TProofNFTFactory} from "../../../typechain-types";
 
 
 /**
@@ -9,13 +10,23 @@ import {Contract} from "ethers";
  * @param chainId - used to give the right ID not NFTs
  * @param [nonce] - if we want to pass a nonce, rather than having the code to evaluate it
  */
-export async function deployNFTFactory(signer: SignerWithAddress, chainId: number, nonce: number = -1): Promise<Contract> {
+export async function deployNFTFactory(signer: SignerWithAddress, chainId: number, nonce: number = -1): Promise<TProofNFTFactory> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofNFTFactory", signer);
   return await contractFactory.deploy(
     chainId,
     { nonce: next_nonce }
-  );
+  ) as TProofNFTFactory;
+}
+
+/**
+ * Attach to an already deployed instance of NFTFactory
+ * @param user - user that will interact with the contract
+ * @param contractAddress - address of the deployed contract
+ */
+export async function attachNFTFactory(user: SignerWithAddress, contractAddress: string): Promise<TProofNFTFactory> {
+  const contractFactory = await ethers.getContractFactory("tProofNFTFactory", user);
+  return await contractFactory.attach(contractAddress) as TProofNFTFactory;
 }
 
 /**

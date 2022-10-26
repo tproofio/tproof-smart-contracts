@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {Contract} from "ethers";
+import {TProofHashRegistryStorageType_ArweaveV1} from "../../../typechain-types";
 
 
 /**
@@ -13,11 +14,11 @@ export async function deployHashRegistryStorageType_ArweaveV1(
   signer: SignerWithAddress,
   tProofHashRegistryAddress: string,
   nonce: number = -1
-): Promise<Contract> {
+): Promise<TProofHashRegistryStorageType_ArweaveV1> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofHashRegistryStorageType_ArweaveV1", signer);
   return await contractFactory.deploy(
     tProofHashRegistryAddress,
     { nonce: next_nonce }
-  );
+  ) as TProofHashRegistryStorageType_ArweaveV1;
 }
