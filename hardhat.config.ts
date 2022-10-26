@@ -35,6 +35,11 @@ const config: HardhatUserConfig = {
       url: secrets.nodeUrls.mainnetEth,
       accounts: [secrets.privateKeys.mainnetEth.deployer],
       gasPrice: "auto"
+    },
+    mainnetPoly: {
+      url: secrets.nodeUrls.mainnetPoly,
+      accounts: [secrets.privateKeys.mainnetPoly.deployer],
+      gasPrice: "auto"
     }
   },
   etherscan: {

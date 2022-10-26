@@ -206,4 +206,28 @@ contract tProofRouter is AccessControl, Pausable {
     function toggleUrlVerificationService() public onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused() {
         enableFileUrlVerification = !enableFileUrlVerification;
     }
+
+    /**
+     * @notice Sets a new mint price (in ETH)
+     * @param _newMintPrice - the new mint price to set
+     */
+    function setMintPrice(uint _newMintPrice) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        MINT_PRICE = _newMintPrice;
+    }
+
+    /**
+     * @notice Sets a new verification price (in ETH)
+     * @param _newVerificationPrice - the new mint price to set
+     */
+    function setVerificationPrice(uint _newVerificationPrice) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        VERIFICATION_PRICE = _newVerificationPrice;
+    }
+
+    /**
+     * @notice Sets a new value of seconds to keep valid the hash verification request
+     * @param _newValidityForHashVerification - the new amount of time, in seconds
+     */
+    function setValidityForHashVerification(uint _newValidityForHashVerification) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        VALIDITY_FOR_HASH_VERIFICATION = _newValidityForHashVerification;
+    }
 }

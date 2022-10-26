@@ -14,6 +14,7 @@ import {deployHashRegistry} from "../../scripts/Deployer/SingleContracts/HashReg
 import {deploy} from "../../scripts/Deployer/deploy";
 import {CHAIN_CONSTANTS} from "../../scripts/ProjectConstants";
 import { expect } from "chai";
+import {address} from "hardhat/internal/core/config/config-validation";
 
 describe("Minting via Router", () => {
 
@@ -44,7 +45,7 @@ describe("Minting via Router", () => {
       CHAIN_CONSTANTS[TEST_CHAIN_ID].PREPAID_TPROOF_VALIDITY_SECS,
       CHAIN_CONSTANTS[TEST_CHAIN_ID].INITIAL_MINT_PRICE,
       CHAIN_CONSTANTS[TEST_CHAIN_ID].INITIAL_VERIFICATION_PRICE,
-      true
+      false
     );
 
     tProofRouter = res.tProofRouter;
@@ -68,6 +69,11 @@ describe("Minting via Router", () => {
     expect.fail("Mint directly in NFT contract without role");
   });
 
-
+  it("Should mint a proof", async() => {
+    let hash: string = ethers.utils.keccak256(ethers.utils.randomBytes(32));
+    await tProofRouter.createProofs([hash], [""], [false], [0], user01.address, deployer.address, {
+      value: CHAIN_CONSTANTS[TEST_CHAIN_ID].INITIAL_MINT_PRICE
+    })
+  })
 
 })

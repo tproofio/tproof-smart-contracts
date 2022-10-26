@@ -5,6 +5,7 @@ import {ethers} from "hardhat";
 import {expect} from "chai";
 import {CHAIN_CONSTANTS} from "../../scripts/ProjectConstants";
 import {TEST_CHAIN_ID} from "../_setup/TestConstants";
+import exp from "constants";
 
 const PREPAID_TPROOF_VALIDITY_SECS = CHAIN_CONSTANTS[TEST_CHAIN_ID].PREPAID_TPROOF_VALIDITY_SECS;
 
@@ -265,6 +266,18 @@ describe("tProofRouter", () => {
       });
     });
 
+  });  // end of User interaction functions
+
+  describe("Admin interaction functions", async () => {
+    let tProofRouter: TProofRouter;
+
+    before(async () => {
+      const NFTFactory = ethers.utils.getAddress("0xaabbccddeeff0011223344556677889901234567");
+      const HashRegistry = ethers.utils.getAddress("0xaabbccddeeff00112233445566778899abcdef12");
+      tProofRouter = await deployRouter(deployer, initialMintPrice, initialVerificationPrice,
+        PREPAID_TPROOF_VALIDITY_SECS, NFTFactory, HashRegistry);
+    });
+
     describe("Withdraw", () => {
 
       let WITHDRAW_ROLE: string = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("WITHDRAW_ROLE"));
@@ -327,8 +340,41 @@ describe("tProofRouter", () => {
 
     });
 
+    describe("Change prices", () => {
+      it("Should change mint price", async () => {
+        let newMintPrice = initialMintPrice.div(2);
+        await tProofRouter.setMintPrice(newMintPrice);
+        expect(await tProofRouter.MINT_PRICE()).to.be.equals(newMintPrice);
+      })
 
+      it("Should fail (change mint price without permission)", async() => {
+        try {
+          await tProofRouter.connect(user01).setMintPrice(initialMintPrice);
+        } catch (error) {
+          expect(error).to.be.instanceOf(Error);
+          expect(error).to.match(/AccessControl: account 0x([0-9a-fA-F]{40}) is missing role 0x([0-9a-fA-F]{64})/);
+          return;
+        }
+        expect.fail("Changed mint price without role");
+      })
 
-  });  // end of User interaction functions
+      it("Should change verification price", async () => {
+        let newVerificationPrice = initialVerificationPrice.div(2);
+        await tProofRouter.setVerificationPrice(newVerificationPrice);
+        expect(await tProofRouter.VERIFICATION_PRICE()).to.be.equals(newVerificationPrice);
+      })
 
+      it("Should fail (change verification price without permission)", async() => {
+        try {
+          await tProofRouter.connect(user01).setVerificationPrice(initialVerificationPrice);
+        } catch (error) {
+          expect(error).to.be.instanceOf(Error);
+          expect(error).to.match(/AccessControl: account 0x([0-9a-fA-F]{40}) is missing role 0x([0-9a-fA-F]{64})/);
+          return;
+        }
+        expect.fail("Changed verification price without role");
+      })
+
+    })
+  });
 })

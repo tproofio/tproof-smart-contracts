@@ -80,7 +80,7 @@ export const deploy = async (
   console.log("tProofUrlVerifierRouter deployed - " + tProofUrlVerifierRouter.address);
 
   if (enableWaiting)
-    await new Promise((resolve, reject) => {setTimeout(resolve,3000)});
+    await new Promise((resolve, reject) => {setTimeout(resolve,15000)});
 
   /// Section where we set all the post-constructor values
 

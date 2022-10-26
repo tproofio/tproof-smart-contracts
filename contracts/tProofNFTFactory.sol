@@ -44,8 +44,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     mapping (uint => tProofNFTData) public data;
     /// @dev description for the json. Stores in a separate part as this is highly optional
     mapping (uint => string) public description;
-    /// @dev if present, we can set a custom image URL
-    mapping (uint => string) public customImageUrl;
 
     // bytes
     /// @dev can call the mint function
@@ -58,7 +56,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     event ProofMinted(uint indexed nft, bytes32 indexed hash, uint timestamp);
     event TitleEdited(uint indexed nft, string newTitle);
     event DescriptionEdited(uint indexed nft, string newDescription);
-    event ImageUrlEdited(uint indexed nft, string newImageUrl);
     event TokenUriGeneratorAddressChanged(address _newAddress);
 
 
@@ -137,20 +134,6 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
             require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can change description");
             description[ _nftNum[i] ] = _description[i];
             emit DescriptionEdited(_nftNum[i], _description[i]);
-        }
-    }
-
-    /**
-    * @notice Set the custom URL image for a given NFT
-    * @param _nftNum list of NFT to set image url
-    * @param _imageUrl list of URLs to be set as custom image
-    **/
-    function setCustomImage(uint[] calldata _nftNum, string[] calldata _imageUrl) external whenNotPaused() {
-        require(_nftNum.length == _imageUrl.length, "Arrays must have same length");
-        for (uint i = 0;  i < _nftNum.length; ++i) {
-            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can change image Url");
-            customImageUrl[ _nftNum[i] ] = _imageUrl[i];
-            emit ImageUrlEdited(_nftNum[i], _imageUrl[i]);
         }
     }
 
