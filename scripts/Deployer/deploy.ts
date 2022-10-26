@@ -10,13 +10,14 @@ import {deployNFTTokenUriGenerator} from "./SingleContracts/NFTTokenUriGenerator
 import {deployHashRegistryStorageType_ArweaveV1} from "./SingleContracts/HashRegistryStorageType_ArweaveV1";
 import {deployUrlVerifierRouter} from "./SingleContracts/UrlVerifierRouter";
 import {BigNumber, Contract} from "ethers";
-import {TProofNFTFactory, TProofRouter} from "../../typechain-types";
-
-const JOD_ID = "f33949491d4a45948c3291e0efe6c6fe";
-const ORACLE_ADDRESS = "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb";
-const LINK_ERC20_ADDRESS = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
-const WITHDRAW_WALLET_ADDRESS = "0x68C85B3eA70C7cAa14Ad0fc52d3A7d03a63Ef64D";
-const PREPAID_TPROOF_VALIDITY_SECS = 86400*14;
+import {
+  TProofHashRegistry,
+  TProofHashRegistryStorageType_ArweaveV1,
+  TProofNFTFactory,
+  TProofNFTTokenUriGenerator,
+  TProofRouter, TProofUrlVerifierRouter
+} from "../../typechain-types";
+import {CHAIN_CONSTANTS} from "../ProjectConstants";
 
 /**
  * Function to deploy all the contracts on a new chain. We've used a dedicate function, so that we can call it
@@ -27,6 +28,8 @@ const PREPAID_TPROOF_VALIDITY_SECS = 86400*14;
  * @param {string} linkErc20Address - LINK token ERC-20 address
  * @param {string} withdrawWalletAddress - wallet address allowed to withdraw funds in Router
  * @param {number} prepaidTProofValiditySecs - how many seconds a proof remains pending, waiting for chainlink URL verification call (suggested >= 14 days)
+ * @param {number} initialMintPrice - price for a mint (initial one)
+ * @param {number} initialVerificationPrice - price for a verification (initial one)
  * @param {boolean} [enableWaiting] - if true, the waiting between certain deployment calls are executed. This can be skipped to speed up tests on local hardhat node
  */
 export const deploy = async (
@@ -35,14 +38,16 @@ export const deploy = async (
   linkErc20Address: string,
   withdrawWalletAddress: string,
   prepaidTProofValiditySecs: number,
+  initialMintPrice: BigNumber,
+  initialVerificationPrice: BigNumber,
   enableWaiting: boolean = false
 ): Promise<{
   tProofNFTFactory: TProofNFTFactory,
-  tProofHashRegistry: Contract,
+  tProofHashRegistry: TProofHashRegistry,
   tProofRouter: TProofRouter,
-  tProofNFTTokenUriGenerator: Contract,
-  tProofHashRegistryStorageTypeArweaveV1: Contract,
-  tProofUrlVerifierRouter: Contract
+  tProofNFTTokenUriGenerator: TProofNFTTokenUriGenerator,
+  tProofHashRegistryStorageTypeArweaveV1: TProofHashRegistryStorageType_ArweaveV1,
+  tProofUrlVerifierRouter: TProofUrlVerifierRouter
 }> => {
 
   // We get the contract to deploy
@@ -58,7 +63,7 @@ export const deploy = async (
   const tProofHashRegistry = await deployHashRegistry(owner, tProofNFTFactory.address, ++next_nonce);
   console.log("tProofHashRegistry deployed - " + tProofHashRegistry.address);
 
-  const tProofRouter = await deployRouter(owner, BigNumber.from(0), BigNumber.from(0), prepaidTProofValiditySecs,
+  const tProofRouter = await deployRouter(owner, initialMintPrice, initialVerificationPrice, prepaidTProofValiditySecs,
     tProofNFTFactory.address, tProofHashRegistry.address, ++next_nonce);
   console.log("tProofRouter deployed - " + tProofRouter.address);
 
@@ -105,8 +110,16 @@ export const deploy = async (
 
 
 if (typeof require !== 'undefined' && require.main === module) {
+  let chainId: "5" | "1337" = "5";
   deploy(
-    JOD_ID, ORACLE_ADDRESS, LINK_ERC20_ADDRESS, WITHDRAW_WALLET_ADDRESS, PREPAID_TPROOF_VALIDITY_SECS, true
+    CHAIN_CONSTANTS[chainId].JOD_ID,
+    CHAIN_CONSTANTS[chainId].ORACLE_ADDRESS,
+    CHAIN_CONSTANTS[chainId].LINK_ERC20_ADDRESS,
+    CHAIN_CONSTANTS[chainId].WITHDRAW_WALLET_ADDRESS,
+    CHAIN_CONSTANTS[chainId].PREPAID_TPROOF_VALIDITY_SECS,
+    CHAIN_CONSTANTS[chainId].INITIAL_MINT_PRICE,
+    CHAIN_CONSTANTS[chainId].INITIAL_VERIFICATION_PRICE,
+    true
   )
     .then(() => process.exit(0))
     .catch((error) => {

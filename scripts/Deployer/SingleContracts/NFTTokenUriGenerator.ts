@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {Contract} from "ethers";
+import {TProofNFTTokenUriGenerator} from "../../../typechain-types";
 
 
 /**
@@ -15,12 +16,12 @@ export async function deployNFTTokenUriGenerator(
   tProofNFTFactoryAddress: string,
   tProofHashRegistryAddress: string,
   nonce: number = -1
-): Promise<Contract> {
+): Promise<TProofNFTTokenUriGenerator> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofNFTTokenUriGenerator", signer);
   return await contractFactory.deploy(
     tProofNFTFactoryAddress,
     tProofHashRegistryAddress,
     { nonce: next_nonce }
-  );
+  ) as TProofNFTTokenUriGenerator;
 }

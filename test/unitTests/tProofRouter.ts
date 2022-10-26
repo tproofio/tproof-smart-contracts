@@ -1,10 +1,12 @@
 import {deployRouter} from "../../scripts/Deployer/SingleContracts/Router";
-import {TProofNFTFactory, TProofRouter} from "../../typechain-types";
+import {TProofRouter} from "../../typechain-types";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {ethers} from "hardhat";
-import {BigNumber} from "ethers";
-import exp from "constants";
 import {expect} from "chai";
+import {CHAIN_CONSTANTS} from "../../scripts/ProjectConstants";
+import {TEST_CHAIN_ID} from "../_setup/TestConstants";
+
+const PREPAID_TPROOF_VALIDITY_SECS = CHAIN_CONSTANTS[TEST_CHAIN_ID].PREPAID_TPROOF_VALIDITY_SECS;
 
 describe("tProofRouter", () => {
 
@@ -12,8 +14,8 @@ describe("tProofRouter", () => {
   let user01: SignerWithAddress;
   let user02: SignerWithAddress;
   let user03: SignerWithAddress;
-  const initialMintPrice = ethers.utils.parseEther("0.1");
-  const initialVerificationPrice = ethers.utils.parseEther("0.2");
+  const initialMintPrice = CHAIN_CONSTANTS[TEST_CHAIN_ID].INITIAL_MINT_PRICE;
+  const initialVerificationPrice = CHAIN_CONSTANTS[TEST_CHAIN_ID].INITIAL_VERIFICATION_PRICE;
 
   before(async () => {
     const [us0, us1, us2, us3] = await ethers.getSigners();
@@ -21,19 +23,17 @@ describe("tProofRouter", () => {
     user01 = us1;
     user02 = us2;
     user03 = us3;
-
   })
 
   describe("Constructor parameters", async() => {
     it("Should deploy with correct constructor parameters", async () => {
-      const validityForHashVerificationSec = 86400*14;
       const NFTFactory = ethers.utils.getAddress("0xaabbccddeeff0011223344556677889901234567");
       const HashRegistry = ethers.utils.getAddress("0xaabbccddeeff00112233445566778899abcdef12");
       let tProofRouter = await deployRouter(deployer, initialMintPrice, initialVerificationPrice,
-        validityForHashVerificationSec, NFTFactory, HashRegistry);
+        PREPAID_TPROOF_VALIDITY_SECS, NFTFactory, HashRegistry);
       expect(await tProofRouter.MINT_PRICE()).to.be.equals(initialMintPrice);
       expect(await tProofRouter.VERIFICATION_PRICE()).to.be.equals(initialVerificationPrice);
-      expect(await tProofRouter.VALIDITY_FOR_HASH_VERIFICATION()).to.be.equals(validityForHashVerificationSec);
+      expect(await tProofRouter.VALIDITY_FOR_HASH_VERIFICATION()).to.be.equals(PREPAID_TPROOF_VALIDITY_SECS);
       expect(await tProofRouter.getNFTFactoryContractAddress()).to.be.equals(NFTFactory);
       expect(await tProofRouter.getHashRegistryContractAddress()).to.be.equals(HashRegistry);
     });
@@ -45,11 +45,10 @@ describe("tProofRouter", () => {
     let hash: string = ethers.utils.keccak256(ethers.utils.randomBytes(32));
 
     before(async () => {
-      const validityForHashVerificationSec = 86400*14;
       const NFTFactory = ethers.utils.getAddress("0xaabbccddeeff0011223344556677889901234567");
       const HashRegistry = ethers.utils.getAddress("0xaabbccddeeff00112233445566778899abcdef12");
       tProofRouter = await deployRouter(deployer, initialMintPrice, initialVerificationPrice,
-        validityForHashVerificationSec, NFTFactory, HashRegistry);
+        PREPAID_TPROOF_VALIDITY_SECS, NFTFactory, HashRegistry);
     });
 
     describe("Create Proofs", () => {
@@ -171,6 +170,18 @@ describe("tProofRouter", () => {
     });
 
     describe("Verify Hash File Url", () => {
+      it("Should fail as verification is turned off", async () => {
+        try {
+          await tProofRouter.connect(user01).verifyHashFileUrl([0], ["https://dada.com"], [0], [0]);
+        } catch (error) {
+          expect(error).to.be.instanceOf(Error);
+          expect(error).to.match(/File Url Verification disabled/);
+          await tProofRouter.toggleUrlVerificationService();
+          return;
+        }
+        expect.fail("Did not fail with Url Verification Disabled");
+      });
+
       it("Should fail as wrong HashRegistryContract is set", async () => {
         try {
           await tProofRouter.connect(user01).verifyHashFileUrl([0], ["https://dada.com"], [0], [0]);
@@ -197,6 +208,19 @@ describe("tProofRouter", () => {
     });
 
     describe("Extend verification", () => {
+      it("Should fail as verification is turned off", async () => {
+        await tProofRouter.toggleUrlVerificationService();
+        try {
+          await tProofRouter.connect(user01).extendVerification([0], [0], {value: 0});
+        } catch (error) {
+          expect(error).to.be.instanceOf(Error);
+          expect(error).to.match(/File Url Verification disabled/);
+          await tProofRouter.toggleUrlVerificationService();
+          return;
+        }
+        expect.fail("Did not fail with Url Verification Disabled");
+      });
+
       it("Should fail as not enough ETH sent", async () => {
         // correct one and send 0 ETH
         try {

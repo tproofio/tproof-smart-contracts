@@ -32,6 +32,10 @@ contract tProofRouter is AccessControl, Pausable {
     // bytes
     bytes32 public constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
 
+    // boolean
+    /// @dev True if the public file URL verification is open, false otherwise
+    bool public enableFileUrlVerification = false;
+
     /**
       * @param _initialMintPrice initial value for MINT_PRICE
       * @param _initialVerificationPrice initial value for VERIFICATION_PRICE
@@ -80,6 +84,7 @@ contract tProofRouter is AccessControl, Pausable {
         if (numHashFilesWithVerification > 0) {
             for (uint i = 0; i < _hash.length; ++i) {
                 if (_withFileURL[i]) {
+                    require(enableFileUrlVerification, "File Url Verification disabled");
                     HashRegistryContract.markHashVerificationPrepaid(
                         NFTFactoryContract.normalizeNftNum(totalSupplyNft), _storageType[i], _evalPaidVerificationExpiration()
                     );
@@ -112,6 +117,7 @@ contract tProofRouter is AccessControl, Pausable {
       */
     function verifyHashFileUrl(uint[] calldata _nft, string[] calldata _url,
                                     uint16[] calldata _storageType, uint32[] calldata _mimeType) external whenNotPaused() {
+        require(enableFileUrlVerification, "File Url Verification disabled");
         // start the certification
         HashRegistryContract.startCertification(_nft, _url, _storageType, _mimeType, msg.sender);
     }
@@ -123,6 +129,7 @@ contract tProofRouter is AccessControl, Pausable {
       * @param _storageType The type of storage for each given NFT where it's plan to upload the file
       */
     function extendVerification(uint[] calldata _nft, uint16[] calldata _storageType) external payable whenNotPaused() {
+        require(enableFileUrlVerification, "File Url Verification disabled");
         require(msg.value >= (_nft.length * VERIFICATION_PRICE), "Not enough ETH sent");
         for (uint i=0; i<_nft.length; ++i) {
             ( , uint64 certificationPendingValidUntil, , , , ) = HashRegistryContract.hashGeneralDetails(_nft[i]);
@@ -191,5 +198,12 @@ contract tProofRouter is AccessControl, Pausable {
      */
     function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) whenPaused() {
         _unpause();
+    }
+
+    /**
+     * @notice Activates / deactivates the URL Verification process
+     */
+    function toggleUrlVerificationService() public onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused() {
+        enableFileUrlVerification = !enableFileUrlVerification;
     }
 }

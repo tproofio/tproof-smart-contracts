@@ -1,21 +1,13 @@
 import {deployNFTFactory} from "../../scripts/Deployer/SingleContracts/NFTFactory";
 import {ethers} from "hardhat";
-import {TProofHashRegistry, TProofNFTFactory, TProofNFTTokenUriGenerator} from "../../typechain-types";
+import {TProofNFTFactory} from "../../typechain-types";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {expect} from "chai";
 import randomstring from "randomstring";
 import {BigNumber} from "ethers";
-import {deployNFTTokenUriGenerator} from "../../scripts/Deployer/SingleContracts/NFTTokenUriGenerator";
-import {deployHashRegistry} from "../../scripts/Deployer/SingleContracts/HashRegistry";
 import {fromNftNumToTokenId} from "../_setup/supportFunctions";
-import exp from "constants";
+import {TEST_CHAIN_ID} from "../_setup/TestConstants";
 
-const JOD_ID = "f33949491d4a45948c3291e0efe6c6fe";
-const ORACLE_ADDRESS = "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb";
-const LINK_ERC20_ADDRESS = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
-const WITHDRAW_WALLET_ADDRESS = "0x68C85B3eA70C7cAa14Ad0fc52d3A7d03a63Ef64D";
-const PREPAID_TPROOF_VALIDITY_SECS = 86400*14;
-const TEST_CHAIN_ID = 1337;
 
 describe("tProofNFTFactory", () => {
 
