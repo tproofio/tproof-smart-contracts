@@ -9,8 +9,8 @@ import {deployRouter, router_setWithdrawRole} from "./SingleContracts/Router";
 import {deployNFTTokenUriGenerator} from "./SingleContracts/NFTTokenUriGenerator";
 import {deployHashRegistryStorageType_ArweaveV1} from "./SingleContracts/HashRegistryStorageType_ArweaveV1";
 import {deployUrlVerifierRouter} from "./SingleContracts/UrlVerifierRouter";
-import {Contract} from "ethers";
-import {TProofNFTFactory} from "../../typechain-types";
+import {BigNumber, Contract} from "ethers";
+import {TProofNFTFactory, TProofRouter} from "../../typechain-types";
 
 const JOD_ID = "f33949491d4a45948c3291e0efe6c6fe";
 const ORACLE_ADDRESS = "0x6e3fC0DD7c85dE678B5494F2b7daDa7232a1e0Cb";
@@ -39,7 +39,7 @@ export const deploy = async (
 ): Promise<{
   tProofNFTFactory: TProofNFTFactory,
   tProofHashRegistry: Contract,
-  tProofRouter: Contract,
+  tProofRouter: TProofRouter,
   tProofNFTTokenUriGenerator: Contract,
   tProofHashRegistryStorageTypeArweaveV1: Contract,
   tProofUrlVerifierRouter: Contract
@@ -58,7 +58,7 @@ export const deploy = async (
   const tProofHashRegistry = await deployHashRegistry(owner, tProofNFTFactory.address, ++next_nonce);
   console.log("tProofHashRegistry deployed - " + tProofHashRegistry.address);
 
-  const tProofRouter = await deployRouter(owner, 0, 0, prepaidTProofValiditySecs,
+  const tProofRouter = await deployRouter(owner, BigNumber.from(0), BigNumber.from(0), prepaidTProofValiditySecs,
     tProofNFTFactory.address, tProofHashRegistry.address, ++next_nonce);
   console.log("tProofRouter deployed - " + tProofRouter.address);
 

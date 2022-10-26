@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract tProofRouter is AccessControl, Pausable {
 
     // contract
-    tProofNFTFactory NFTContract;
+    tProofNFTFactory NFTFactoryContract;
     tProofHashRegistry HashRegistryContract;
 
     // uint256
@@ -44,7 +44,7 @@ contract tProofRouter is AccessControl, Pausable {
         MINT_PRICE = _initialMintPrice;
         VERIFICATION_PRICE = _initialVerificationPrice;
         VALIDITY_FOR_HASH_VERIFICATION = _validityForHashVerification;
-        NFTContract = tProofNFTFactory(_nftContractAddress);
+        NFTFactoryContract = tProofNFTFactory(_nftContractAddress);
         HashRegistryContract = tProofHashRegistry(_hashRegistryAddress);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -73,19 +73,19 @@ contract tProofRouter is AccessControl, Pausable {
         }
         uint amount = (_hash.length * MINT_PRICE) + (numHashFilesWithVerification * VERIFICATION_PRICE);
         require(msg.value >= amount, "Not enough ETH send for minting");
-        uint totalSupplyNft = NFTContract.totalSupply();
-        NFTContract.mint(_to, _hash, _title);
+        uint totalSupplyNft = NFTFactoryContract.totalSupply();
+        NFTFactoryContract.mint(_to, _hash, _title);
 
         // announce we'll certify a certain amount of hashes (already paid)
         if (numHashFilesWithVerification > 0) {
             for (uint i = 0; i < _hash.length; ++i) {
                 if (_withFileURL[i]) {
                     HashRegistryContract.markHashVerificationPrepaid(
-                        NFTContract.normalizeNftNum(totalSupplyNft), _storageType[i], _evalPaidVerificationExpiration()
+                        NFTFactoryContract.normalizeNftNum(totalSupplyNft), _storageType[i], _evalPaidVerificationExpiration()
                     );
                     if (_delegateTo != 0x0000000000000000000000000000000000000000)
                         HashRegistryContract.delegateStartCertificationCall(
-                            NFTContract.normalizeNftNum(totalSupplyNft), _delegateTo, _to
+                            NFTFactoryContract.normalizeNftNum(totalSupplyNft), _delegateTo, _to
                         );
                 }
                 ++totalSupplyNft;
@@ -100,7 +100,7 @@ contract tProofRouter is AccessControl, Pausable {
       * @param _title list of titles to assign to NFTs
       */
     function editProofTitle (uint[] calldata _nftNum, string[] calldata _title) external whenNotPaused() {
-        NFTContract.updateTitle(_nftNum, _title);
+        NFTFactoryContract.updateTitle(_nftNum, _title);
     }
 
     /**
@@ -151,12 +151,33 @@ contract tProofRouter is AccessControl, Pausable {
     }
 
     /**
+     * @notice Get the address of the current instance of NFT Factory initialized
+     * @return The address of the NFTFactoryContract
+    **/
+    function getNFTFactoryContractAddress() external view returns(address) {
+        return address(NFTFactoryContract);
+    }
+
+    /**
+     * @notice Get the address of the current instance of Hash Registry initialized
+     * @return The address of the HashRegistryContract
+    **/
+    function getHashRegistryContractAddress() external view returns(address) {
+        return address(HashRegistryContract);
+    }
+
+    /**
       * @notice Collect the ETH in this contract
       */
     function withdraw() public onlyRole(WITHDRAW_ROLE) whenNotPaused() {
         address payable to = payable(msg.sender);
         to.transfer(address(this).balance);
     }
+
+    /**
+      * @notice To handle possible direct payments to contract
+      */
+    receive() external payable {}
 
     /**
      * @notice Pause the functions of this router

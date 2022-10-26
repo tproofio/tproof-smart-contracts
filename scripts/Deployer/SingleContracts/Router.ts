@@ -1,6 +1,7 @@
 import {ethers} from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-import {Contract} from "ethers";
+import {BigNumber, Contract} from "ethers";
+import { TProofRouter } from "../../../typechain-types";
 
 /**
  * Deploy an instance of Hash Regsitry
@@ -14,13 +15,13 @@ import {Contract} from "ethers";
  */
 export async function deployRouter(
   signer: SignerWithAddress,
-  initialMintPrice: number,
-  initialVerificationPrice: number,
+  initialMintPrice: BigNumber,
+  initialVerificationPrice: BigNumber,
   validityForHashVerification: number,
   tProofNFTFactoryAddress: string,
   tProofHashRegistryAddress: string,
   nonce: number = -1
-): Promise<Contract> {
+): Promise<TProofRouter> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofRouter", signer);
   return await contractFactory.deploy(
@@ -30,7 +31,7 @@ export async function deployRouter(
     tProofNFTFactoryAddress,
     tProofHashRegistryAddress,
     { nonce: next_nonce }
-  );
+  ) as TProofRouter;
 }
 
 /**
