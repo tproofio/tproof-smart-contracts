@@ -7,7 +7,7 @@ import "./tProofHashRegistry.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
 // tProof.io is a tool for Decentralized Proof of Timestamp, that anyone can use
-// to prove a digital content existed prior to a certain point in time.
+// to prove digital content existed prior to a certain point in time.
 // Solution is designed to work 100% on-chain, and to not rely on a central entity.
 // Each proof is created in the form of an NFT.
 //

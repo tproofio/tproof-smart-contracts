@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./tProofNFTFactory.sol";
-import "./tProofHashRegistry.sol";
-import "./tProofGeneralLibrary.sol";
+import "./tProofNFTFactoryPrivate.sol";
+import "../tProofGeneralLibrary.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
@@ -16,14 +15,12 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 
 
 // Generates the TokenUri on its own, making it easy to update the logic of NFT representation
-contract tProofNFTTokenUriGenerator {
+contract tProofNFTTokenUriGeneratorPrivate {
 
-    tProofNFTFactory nftContract;
-    tProofHashRegistry hashRegistry;
+    tProofNFTFactoryPrivate nftContract;
 
-    constructor(address NFTContractAddress, address hashRegistryContractAddress) {
-        nftContract = tProofNFTFactory(NFTContractAddress);
-        hashRegistry = tProofHashRegistry(hashRegistryContractAddress);
+    constructor(address NFTContractAddress) {
+        nftContract = tProofNFTFactoryPrivate(NFTContractAddress);
     }
 
     /**
@@ -53,8 +50,7 @@ contract tProofNFTTokenUriGenerator {
                         '{"name": "', title, '",',
                         ' "description": "',description,'",',
                         ' "image": "https://arweave.net/eesdQDYYNUAKOtKE6YATmeNUEEBfeDJeI9dwOduf4CI",',
-                        ' "attributes":', tokenIdToAttributes(_tokenId, hashStr, creationTimestamp), ",",
-                        ' "external_url": "', hashRegistry.getUrlFromNFT(_tokenId, 1), '"',
+                        ' "attributes":', tokenIdToAttributes(_tokenId, hashStr, creationTimestamp),
                         "}"
                     )
                 )
@@ -70,30 +66,10 @@ contract tProofNFTTokenUriGenerator {
      */
     function tokenIdToAttributes(uint _tokenId, string memory _hash, uint _creationTimestamp) internal view returns (string memory)
     {
-        string memory attributesString;
-        (bool verified, uint64 certificationPendingValidUntil, uint16 storageType,
-            uint32 mimeType, bool verificationInProgress, bool verificationFailed) = hashRegistry.hashGeneralDetails(_tokenId);
-
-        string memory storageTypeStr = hashRegistry.storageTypeName(storageType);
-        string memory MIMETypeStr = hashRegistry.mimeTypes(mimeType);
-        uint tID = _tokenId;  // due to stack too deep error
-
-        // define if the verification is valid or not
-        string memory verifiedStr = verified ?
-                                    "True"
-                                    :
-                                    (verificationInProgress || (!verificationInProgress && certificationPendingValidUntil > block.timestamp)) ?
-                                    "Pending" : "False";
-
-        attributesString = string.concat(
+        string memory attributesString = string.concat(
             '[',
                 '{"trait_type":"Hash","value":"',_hash,'"},',
-                '{"trait_type":"Created At","value":"',Strings.toString(_creationTimestamp),'"},',
-                '{"trait_type":"Verified","value":"', verifiedStr ,'"},',
-                '{"trait_type":"Storage Type","value":"',storageTypeStr,'"},',
-                '{"trait_type":"MIME Type","value":"',MIMETypeStr,'"},',
-                '{"trait_type":"Url","value":"',hashRegistry.getUrlFromNFT(tID, 1),'"},',
-                '{"trait_type":"Verification Failed","value":"',tProofGeneralLibrary.boolToString(verificationFailed),'"}',
+                '{"trait_type":"Created At","value":"',Strings.toString(_creationTimestamp),'"}',
             ']'
         );
 
@@ -109,15 +85,10 @@ contract tProofNFTTokenUriGenerator {
      */
     function getDescription(uint _tokenId, string memory _hash, uint _creationTimestamp) internal view returns (string memory) {
         string memory descriptionText = nftContract.description(_tokenId);
-        (bool verified, , , , , ) = hashRegistry.hashGeneralDetails(_tokenId);
         string memory tmpDescription =  string.concat(
             "**Hash:** ", _hash, "\\n\\n",
             "**Created at** (timestamp): ", Strings.toString(_creationTimestamp), "\\n\\n"
         );
-        if (verified) {
-            string memory url = hashRegistry.getUrlFromNFT(_tokenId, 1);
-            tmpDescription = string.concat(tmpDescription, "**Public URL:** [", url, "](", url, ")\\n\\n");
-        }
         if (bytes(descriptionText).length > 0) {
             tmpDescription = string.concat(tmpDescription, "\\n\\n");
             tmpDescription = string.concat(tmpDescription, descriptionText, "\\n\\n");

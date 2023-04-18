@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 import "./tProofGeneralLibrary.sol";
-import "./interfaces/ItProofNFTTokenUriGeneratorInterface.sol";
+import "../interfaces/ItProofNFTTokenUriGeneratorInterface.sol";
 
 // tProof.io is a tool for Decentralized Proof of Timestamp, that anyone can use
 // to prove digital content existed prior to a certain point in time.
@@ -18,7 +18,7 @@ import "./interfaces/ItProofNFTTokenUriGeneratorInterface.sol";
 
 
 // NFT factory to manage the NFT generation
-contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
+contract tProofNFTFactoryPrivate is ERC721, AccessControl, Ownable, Pausable {
 
     using Strings for uint256;
 
@@ -38,6 +38,7 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     uint256 constant MAX_SUPPLY = 10 ** 50 - 1;
     uint256 immutable DEPLOYMENT_ID;
     uint256 public totalSupply = 0;
+    uint256 public prepaidMints = 0;
 
     // mapping
     /// @dev stores the core data of each NFT
@@ -48,6 +49,8 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     // bytes
     /// @dev can call the mint function
     bytes32 public constant MINT_ROLE = keccak256("MINT_ROLE");
+    /// @dev can call the mint function
+    bytes32 public constant NFT_COLLECTION_OWNER_ROLE = keccak256("NFT_COLLECTION_OWNER_ROLE");
 
     // contract
     ItProofNFTTokenUriGeneratorInterface tokenUriGeneratorContract;
@@ -73,6 +76,7 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     function mint(address _to, bytes32[] calldata _hash, string[] calldata _title)
                         external whenNotPaused() onlyRole(MINT_ROLE) {
         require((_hash.length == _title.length), "All arrays must have same length");
+        require(prepaidMints >= _hash.length, "Not enough prepaid mints");
 
         for (uint i=0; i<_hash.length; ++i) {
             _safeMint(_to, normalizeNftNum( totalSupply + i ));
@@ -91,6 +95,7 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
         }
 
         totalSupply = totalSupply + _hash.length;
+        prepaidMints = prepaidMints - _hash.length;
     }
 
     /**
@@ -100,8 +105,9 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     **/
     function updateTitle(uint[] calldata _nftNum, string[] calldata _title) external whenNotPaused() {
         require(_nftNum.length == _title.length, "Arrays must have same length");
+        require(hasRole(NFT_COLLECTION_OWNER_ROLE, msg.sender), "Only NFT_COLLECTION_OWNER_ROLE can change title");
         for (uint i = 0;  i < _nftNum.length; ++i) {
-            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can change title");
+            require(exists(_nftNum[i]), "NFT must exists");
             data[ _nftNum[i] ].title = _title[i];
             emit TitleEdited(_nftNum[i], _title[i]);
         }
@@ -130,8 +136,9 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
     **/
     function setDescription(uint[] calldata _nftNum, string[] calldata _description) external whenNotPaused() {
         require(_nftNum.length == _description.length, "Arrays must have same length");
+        require(hasRole(NFT_COLLECTION_OWNER_ROLE, msg.sender), "Only NFT_COLLECTION_OWNER_ROLE can change description");
         for (uint i = 0;  i < _nftNum.length; ++i) {
-            require(ownerOf(_nftNum[i]) == msg.sender, "Only owner can change description");
+            require(exists(_nftNum[i]), "NFT must exists");
             description[ _nftNum[i] ] = _description[i];
             emit DescriptionEdited(_nftNum[i], _description[i]);
         }
@@ -199,5 +206,11 @@ contract tProofNFTFactory is ERC721, AccessControl, Ownable, Pausable {
         _unpause();
     }
 
+    /**
+     * @notice Updates the value of prepaid mints
+     */
+    function updatePrepaidMints(uint256 _newValue) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        prepaidMints = _newValue;
+    }
 
 }
