@@ -13,7 +13,9 @@ export async function deployTProofPrivateCollectionAlias(
 ): Promise<TProofPrivateCollectionAlias> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofPrivateCollectionAlias", signer);
-  return await contractFactory.deploy({ nonce: next_nonce }) as TProofPrivateCollectionAlias;
+  const contract = await contractFactory.deploy({ nonce: next_nonce }) as TProofPrivateCollectionAlias;
+  await contract.deployed();
+  return contract;
 }
 
 /**

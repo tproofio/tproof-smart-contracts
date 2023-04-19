@@ -3,7 +3,7 @@ import {BigNumber, Contract} from "ethers";
 import {TProofNFTFactoryPrivate, TProofNFTTokenUriGeneratorPrivate} from "../../../typechain-types";
 import {
   deployTProofNFTFactoryPrivate,
-  NFTFactoryPrivate_setMintRole, NFTFactoryPrivate_setNFTCollectionOwnerRole
+  NFTFactoryPrivate_setMintRole, NFTFactoryPrivate_setNFTCollectionOwnerRole, NFTFactoryPrivate_setTokenUriGenerator
 } from "../SingleContracts/private-collections/NFTFactoryPrivate";
 import {
   deployTProofNFTTokenUriGeneratorPrivate
@@ -57,6 +57,12 @@ export const deploy = async (
   for (let o of collectionOwners) {
     await NFTFactoryPrivate_setNFTCollectionOwnerRole(owner, tProofNFTFactoryPrivate.address, o, ++next_nonce);
     console.log("Collection Owner Role assigned to " + o);
+  }
+
+  // set the tokenURIGenerator smart contract address
+  for (let o of collectionOwners) {
+    await NFTFactoryPrivate_setTokenUriGenerator(owner, tProofNFTFactoryPrivate.address, tProofNFTTokenUriGeneratorPrivate.address, ++next_nonce);
+    console.log("Set TokenUriGenerator contract ad address " + tProofNFTTokenUriGeneratorPrivate.address);
   }
 
   return { tProofNFTFactoryPrivate, tProofNFTTokenUriGeneratorPrivate }

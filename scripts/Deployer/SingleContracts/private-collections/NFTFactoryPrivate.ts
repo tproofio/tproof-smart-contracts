@@ -17,7 +17,9 @@ export async function deployTProofNFTFactoryPrivate(
 ): Promise<TProofNFTFactoryPrivate> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofNFTFactoryPrivate", signer);
-  return await contractFactory.deploy(certName, certSymbol, { nonce: next_nonce }) as TProofNFTFactoryPrivate;
+  const contract = await contractFactory.deploy(certName, certSymbol, { nonce: next_nonce }) as TProofNFTFactoryPrivate;
+  await contract.deployed();
+  return contract;
 }
 
 
@@ -66,6 +68,30 @@ export async function NFTFactoryPrivate_setNFTCollectionOwnerRole(
     .grantRole(
       ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NFT_COLLECTION_OWNER_ROLE")),
       walletAddress,
+      { nonce: next_nonce }
+    );
+}
+
+
+/**
+ * Adds the NFT_COLLECTION_OWNER_ROLE to the given address
+ * @param signer - who's going to sign the transaction
+ * @param tProofNFTFactoryPrivateAddress - address of the deployed contract
+ * @param setTokenUriGeneratorAddress - address of the token Uri Generator Smart Contract
+ * @param [nonce] - if we want to pass a nonce, rather than having the code to evaluate it
+ */
+export async function NFTFactoryPrivate_setTokenUriGenerator(
+  signer: SignerWithAddress,
+  tProofNFTFactoryPrivateAddress: string,
+  setTokenUriGeneratorAddress: string,
+  nonce: number = -1
+): Promise<void> {
+  let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
+  const contractFactory = await ethers.getContractFactory("tProofNFTFactoryPrivate", signer);
+  return await contractFactory
+    .attach(tProofNFTFactoryPrivateAddress)
+    .setTokenUriGenerator(
+      setTokenUriGeneratorAddress,
       { nonce: next_nonce }
     );
 }

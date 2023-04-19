@@ -47,7 +47,7 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
     **/
     function addAlias(string memory _alias, address _collectionAddress)
     external whenNotPaused() onlyRole(ALIAS_EDITOR_ROLE) {
-        require(keccak256(abi.encodePacked(addressToAlias[_collectionAddress])) != keccak256(abi.encodePacked("")), "Collection has already an alias");
+        require(keccak256(abi.encodePacked(addressToAlias[_collectionAddress])) == keccak256(abi.encodePacked("")), "Collection has already an alias");
         require(aliasToAddress[_alias] == address(0), "Alias already associated");
 
         aliasToAddress[_alias] = _collectionAddress;

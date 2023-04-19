@@ -15,5 +15,7 @@ export async function deployTProofNFTTokenUriGeneratorPrivate(
 ): Promise<TProofNFTTokenUriGeneratorPrivate> {
   let next_nonce = nonce >= 0 ? nonce : await signer.getTransactionCount();
   const contractFactory = await ethers.getContractFactory("tProofNFTTokenUriGeneratorPrivate", signer);
-  return await contractFactory.deploy(nftContractAddress, { nonce: next_nonce }) as TProofNFTTokenUriGeneratorPrivate;
+  const contract = await contractFactory.deploy(nftContractAddress, { nonce: next_nonce }) as TProofNFTTokenUriGeneratorPrivate;
+  await contract.deployed();
+  return contract;
 }
