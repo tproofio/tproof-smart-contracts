@@ -30,6 +30,7 @@ import {CHAIN_CONSTANTS} from "../ProjectConstants";
  * @param {number} prepaidTProofValiditySecs - how many seconds a proof remains pending, waiting for chainlink URL verification call (suggested >= 14 days)
  * @param {number} initialMintPrice - price for a mint (initial one)
  * @param {number} initialVerificationPrice - price for a verification (initial one)
+ * @param {number} chainId - id of the chain we're deploying to
  * @param {boolean} [enableWaiting] - if true, the waiting between certain deployment calls are executed. This can be skipped to speed up tests on local hardhat node
  */
 export const deploy = async (

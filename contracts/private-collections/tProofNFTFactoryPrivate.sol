@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
-import "./tProofGeneralLibrary.sol";
+import "../tProofGeneralLibrary.sol";
 import "../interfaces/ItProofNFTTokenUriGeneratorInterface.sol";
 
 // tProof.io is a tool for Decentralized Proof of Timestamp, that anyone can use
@@ -35,8 +35,7 @@ contract tProofNFTFactoryPrivate is ERC721, AccessControl, Ownable, Pausable {
     }
 
     //uint256
-    uint256 constant MAX_SUPPLY = 10 ** 50 - 1;
-    uint256 immutable DEPLOYMENT_ID;
+    uint256 constant MAX_SUPPLY = 2 ** 256 - 1;
     uint256 public totalSupply = 0;
     uint256 public prepaidMints = 0;
 
@@ -62,8 +61,8 @@ contract tProofNFTFactoryPrivate is ERC721, AccessControl, Ownable, Pausable {
     event TokenUriGeneratorAddressChanged(address _newAddress);
 
 
-    constructor(uint256 _deploymentId) ERC721("tProof Certifications", "TPROOF") {
-        DEPLOYMENT_ID = _deploymentId;
+    constructor(string memory certName, string memory certSymbol)
+                ERC721(string.concat(certName, " | tProof"), string.concat("t", certSymbol)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -79,19 +78,19 @@ contract tProofNFTFactoryPrivate is ERC721, AccessControl, Ownable, Pausable {
         require(prepaidMints >= _hash.length, "Not enough prepaid mints");
 
         for (uint i=0; i<_hash.length; ++i) {
-            _safeMint(_to, normalizeNftNum( totalSupply + i ));
+            _safeMint(_to, ( totalSupply + i ));
         }
 
         // stores hash and title information
         for(uint i = 0; i < _hash.length; ++i) {
-            uint normalizedNftNum = normalizeNftNum( totalSupply + i );
-            data[normalizedNftNum].hash = _hash[i];
-            data[normalizedNftNum].creationTimestamp = uint256(block.timestamp);
+            uint nftNum = ( totalSupply + i );
+            data[nftNum].hash = _hash[i];
+            data[nftNum].creationTimestamp = uint256(block.timestamp);
             if (!tProofGeneralLibrary.isStringEmpty(_title[i])) {
-                data[normalizedNftNum].title = _title[i];
-                emit TitleEdited(normalizedNftNum, _title[i]);
+                data[nftNum].title = _title[i];
+                emit TitleEdited(nftNum, _title[i]);
             }
-            emit ProofMinted(normalizedNftNum, _hash[i], block.timestamp);
+            emit ProofMinted(nftNum, _hash[i], block.timestamp);
         }
 
         totalSupply = totalSupply + _hash.length;
@@ -152,17 +151,6 @@ contract tProofNFTFactoryPrivate is ERC721, AccessControl, Ownable, Pausable {
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         require(address(tokenUriGeneratorContract) != address(0), "tokenUriGeneratorContract not initialized");
         return tokenUriGeneratorContract.getTokenUri(_tokenId);
-    }
-
-    /**
-     * @notice Given an NftNum, returns the complete number with the Deployment Id (the TokenId)
-     * @dev If a value above 10**50 is given, no checks are performed, supposing it's already valid
-     * @param _nftNum The number of NFT
-     * @return The correct Token ID for this DeploymentId
-     **/
-    function normalizeNftNum(uint256 _nftNum) public view returns(uint256) {
-        if (_nftNum > MAX_SUPPLY) return _nftNum;
-        else return ( (10**50 * DEPLOYMENT_ID) + _nftNum);
     }
 
 
