@@ -34,18 +34,21 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
     /// @dev This event is emitted when an alias is removed from a collection.
     event AliasRemoved(string indexed _alias, address indexed _collectionAddress);
 
+    constructor () {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
 
     /**
     * @dev Adds an alias to the list of aliases
     * @notice Adds an alias to the list of aliases
     * @param _alias new alias to add
     * @param _collectionAddress the address of the collection matching the alias
-    * @return None
     **/
     function addAlias(string memory _alias, address _collectionAddress)
     external whenNotPaused() onlyRole(ALIAS_EDITOR_ROLE) {
-        require(addressToAlias[_collectionAddress] == "", "Collection has already an alias");
-        return(aliasToAddress[_alias] == address(0), "Alias already associated");
+        require(keccak256(abi.encodePacked(addressToAlias[_collectionAddress])) != keccak256(abi.encodePacked("")), "Collection has already an alias");
+        require(aliasToAddress[_alias] == address(0), "Alias already associated");
 
         aliasToAddress[_alias] = _collectionAddress;
         addressToAlias[_collectionAddress] = _alias;
@@ -58,11 +61,10 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
     * @notice Update the alias for a collection
     * @param _collection address of the collection
     * @param _newAlias The new alias for the collection
-    * @return None
     **/
     function updateAlias(address _collection, string memory _newAlias) external whenNotPaused() onlyRole(ALIAS_EDITOR_ROLE) {
-        require(addressToAlias[_collection] != "", "Alias must assigned before editing it");
-        require(aliasToAddress[_newAlias] == "", "Alias already taken");
+        require(keccak256(abi.encodePacked(addressToAlias[_collection])) != keccak256(abi.encodePacked("")), "Alias must be assigned before editing it");
+        require(aliasToAddress[_newAlias] == address(0), "Alias already taken");
         string memory currentAlias = addressToAlias[_collection];
 
         aliasToAddress[_newAlias] = _collection;
@@ -76,7 +78,6 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
     * @dev Removes an alias from the list of aliases
     * @notice Removes an alias from the list of aliases
     * @param _alias The alias to remove
-    * @return None
     **/
     function removeAlias(string memory _alias) external whenNotPaused() onlyRole(ALIAS_EDITOR_ROLE) {
         address collectionAddress = aliasToAddress[_alias];
@@ -90,7 +91,6 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
 
     /**
      * @notice Pause the generation of aliases
-     * @return None
      */
     function pause () public onlyOwner whenNotPaused() {
         _pause();
@@ -98,7 +98,6 @@ contract tProofPrivateCollectionAlias is Ownable, AccessControl, Pausable {
 
     /**
      * @notice Unpause the generation of aliases
-     * @return None
      */
     function unpause() public onlyOwner whenPaused() {
         _unpause();
