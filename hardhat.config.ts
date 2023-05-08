@@ -36,6 +36,11 @@ const config: HardhatUserConfig = {
       accounts: [secrets.privateKeys.mainnetEth.deployer],
       gasPrice: "auto"
     },
+    mumbai: {
+      url: secrets.nodeUrls.mumbai,
+      accounts: [secrets.privateKeys.mumbai.deployer],
+      gasPrice: "auto"
+    },
     mainnetPoly: {
       url: secrets.nodeUrls.mainnetPoly,
       accounts: [secrets.privateKeys.mainnetPoly.deployer],
@@ -46,7 +51,8 @@ const config: HardhatUserConfig = {
     apiKey: {
       goerli: secrets.etherscanAPI,
       mainnet: secrets.etherscanAPI,
-      polygon: secrets.polygonscanAPI
+      polygon: secrets.polygonscanAPI,
+      polygonMumbai: secrets.polygonscanAPI,
     }
   }
 };

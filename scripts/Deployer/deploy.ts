@@ -112,7 +112,7 @@ export const deploy = async (
 
 
 if (typeof require !== 'undefined' && require.main === module) {
-  let chainId: "5" | "137" | "1337" = "137";
+  let chainId: "5" | "137" | "80001" | "1337" = "137";
   deploy(
     CHAIN_CONSTANTS[chainId].JOD_ID,
     CHAIN_CONSTANTS[chainId].ORACLE_ADDRESS,

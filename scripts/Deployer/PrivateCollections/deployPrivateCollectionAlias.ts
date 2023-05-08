@@ -4,7 +4,6 @@ import {
   deployTProofPrivateCollectionAlias,
   privateCollectionAlias_setAliasEditorRole
 } from "../SingleContracts/private-collections/PrivateCollectionAlias";
-import {hashRegistry_setCertificationManagerRole} from "../SingleContracts/HashRegistry";
 
 /**
  * Function to deploy the instance of PrivateCollectionAlias smart contract
@@ -35,7 +34,7 @@ export const deploy = async (
 }
 
 if (typeof require !== 'undefined' && require.main === module) {
-  let chainId: "5" | "137" | "1337" = "137";
+  let chainId: "5" | "137" | "80001" | "1337" = "137";
   deploy(
     true
   )

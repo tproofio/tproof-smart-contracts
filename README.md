@@ -18,6 +18,7 @@ You can directly interact with deployed smart contracts through dApp on [app.tpr
 
 Current we have an active deployment on the following networks:
 * Polygon Mainnet (coming 26th Oct 22)
+* Polygon Mumbai (test)
 * Ethereum Goerli (test)
 
 Full documentation available on [docs.tproof.io](https://docs.tproof.io)

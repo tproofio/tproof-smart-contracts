@@ -1,15 +1,15 @@
 import {ethers} from "hardhat";
-import {BigNumber, Contract} from "ethers";
 import {TProofNFTFactoryPrivate, TProofNFTTokenUriGeneratorPrivate} from "../../../typechain-types";
 import {
   deployTProofNFTFactoryPrivate,
-  NFTFactoryPrivate_setMintRole, NFTFactoryPrivate_setNFTCollectionOwnerRole, NFTFactoryPrivate_setTokenUriGenerator
+  NFTFactoryPrivate_setMintRole,
+  NFTFactoryPrivate_setNFTCollectionOwnerRole,
+  NFTFactoryPrivate_setTokenUriGenerator
 } from "../SingleContracts/private-collections/NFTFactoryPrivate";
 import {
   deployTProofNFTTokenUriGeneratorPrivate
 } from "../SingleContracts/private-collections/NFTTokenUriGeneratorPrivate";
 import {PRIVATE_DEPLOYMENT} from "../../ProjectConstants";
-import {privateCollectionAlias_setAliasEditorRole} from "../SingleContracts/private-collections/PrivateCollectionAlias";
 
 
 /**
@@ -70,7 +70,7 @@ export const deploy = async (
 
 
 if (typeof require !== 'undefined' && require.main === module) {
-  let chainId: "5" | "137" | "1337" = "137";
+  let chainId: "5" | "137" | "80001" | "1337" = "137";
   deploy(
     PRIVATE_DEPLOYMENT.NAME,
     PRIVATE_DEPLOYMENT.SYMBOL,
